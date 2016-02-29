@@ -2,13 +2,13 @@
 # edit by huanglilong for stm32f103c8 -- 2016/2/29
 
 # MCU name and submodel
-MCU      = cortex-m3
+MCU      = cortex-m3#Cortex-M3 Core
 SUBMDL   = stm32f103
 
 # toolchain (using code sourcery now)
 TCHAIN 	 = arm-none-eabi
-THUMB    = -mthumb
-THUMB_IW = -mthumb-interwork
+THUMB    = -mthumb#select between generating code that executes in ARM and Thumb states
+THUMB_IW = -mthumb-interwork#generate code that supports calling betweem the ARM and Thumb instruction sets
 
 # Target file name (without extension).
 BUILDDIR = build
@@ -27,24 +27,29 @@ INCDIRS = ./$(ST_START) ./$(ST_USART)
 
 CFLAGS = $(DEBUG)
 CFLAGS += -O$(OPT)
-CFLAGS += -ffunction-sections -fdata-sections
-CFLAGS += -Wall -Wimplicit
-CFLAGS += -Wcast-align
-CFLAGS += -Wpointer-arith -Wswitch
-CFLAGS += -Wredundant-decls -Wreturn-type -Wshadow -Wunused
+CFLAGS += -ffunction-sections -fdata-sections#place each function or data data item into its own section in the output file
+CFLAGS += -Wall -Wimplicit#-Wall: turn on all optional warnings, -Wimplicit: warn when a declaration does not specify a type
+CFLAGS += -Wcast-align#warn whenever a pointer is cast such that the required alignment of target is increased.
+CFLAGS += -Wpointer-arith -Wswitch#-Wswitch: warn for switch statement
+CFLAGS += -Wredundant-decls -Wreturn-type -Wshadow -Wunused#warn if anything is declared more than once in the same scope
+														   #return type
+														   #variable or function is shadowed
+														   #defined but not used
 # add predefinitions STM32F10X_MD and USE_STDPERIPH_DRIVER for using stm's lib
 CFLAGS += -DSTM32F10X_MD -DUSE_STDPERIPH_DRIVER
-CFLAGS += -Wa,-adhlns=$(BUILDDIR)/$(subst $(suffix $<),.lst,$<)
+CFLAGS += -Wa,-adhlns=$(BUILDDIR)/$(subst $(suffix $<),.lst,$<)#-Wa: pass option to assember
 CFLAGS += $(patsubst %,-I%,$(INCDIRS))
 
 # Aeembler Flags
 ASFLAGS = -Wa,-adhlns=$(BUILDDIR)/$(<:.s=.lst)#,--g$(DEBUG)
 
-LDFLAGS = -nostartfiles -Wl,-Map=$(TARGET).map,--cref,--gc-sections
-LDFLAGS += -lc -lgcc
+LDFLAGS = -nostartfiles -Wl,-Map=$(TARGET).map,--cref,--gc-sections#-Wl: pass option to the linker
+																   #--cref: output a cross reference table
+																   #--gc-sections: enable garbage collection
+LDFLAGS += -lc -lgcc#link libc.a and libgcc.a
 
 # Set the linker script
-LDFLAGS +=-T$(ST_START)/c_only_md.ld
+LDFLAGS +=-T$(ST_START)/c_only_md.ld#use c_only_md.ld for linker script
 
 # Define programs and commands.
 SHELL = sh
@@ -77,7 +82,7 @@ MSG_CLEANING = Cleaning project:
 
 # Combine all necessary flags and optional flags.
 # Add target processor to flags.
-GENDEPFLAGS = -MD -MP -MF .dep/$(@F).d
+GENDEPFLAGS = -MD -MP -MF .dep/$(@F).d#generate depedencies
 ALL_CFLAGS  = -mcpu=$(MCU) $(THUMB_IW) -I. $(CFLAGS) $(GENDEPFLAGS)
 ALL_ASFLAGS = -mcpu=$(MCU) $(THUMB_IW) -I. -x assembler-with-cpp $(ASFLAGS)
 
@@ -116,7 +121,7 @@ HEXSIZE = $(SIZE) --target=binary $(TARGET).hex
 ELFSIZE = $(SIZE) -A $(TARGET).elf
 
 # go!
-all: begin gccversion build sizeafter finished end
+all: begin build finished end
 build: elf bin lss sym
 
 bin: $(TARGET).bin
@@ -141,31 +146,6 @@ tags:
 end:
 	@echo $(MSG_END)
 	@echo
-sizeafter:
-	@if [ -f $(TARGET).elf ]; then echo; echo $(MSG_SIZE_AFTER); $(ELFSIZE); echo; fi
-gccversion:
-	@$(CC) --version
-
-program:
-	@echo "Flash-programming with OpenOCD"
-	cp $(TARGET).bin flash/tmpflash.bin
-	cd flash && openocd -f flash.cfg
-
-program_serial:
-	@echo "Flash-programming with stm32loader.py"
-	./flash/stm32loader.py -p /dev/ttyUSB0 -evw build/maple_boot.bin
-
-debug: $(TARGET).bin
-	@echo "Flash-programming with OpenOCD - DEBUG"
-	cp $(TARGET).bin flash/tmpflash.bin
-	cd flash && openocd -f debug.cfg
-
-install: $(TARGET).bin
-	cp $(TARGET).bin build/main.bin
-	openocd -f flash/perry_flash.cfg
-
-run: $(TARGET).bin
-	openocd -f flash/run.cfg
 
 # Create final output file (.hex) from ELF output file.
 %.hex: %.elf
@@ -244,8 +224,8 @@ clean_list :
 
 
 # Listing of phony targets.
-.PHONY : all begin finish tags end sizeafter gccversion \
-build elf hex bin lss sym clean clean_list program cscope
+.PHONY : all begin finish tags end   \
+build elf hex bin lss sym clean clean_list  cscope
 
 cscope:
 	rm -rf *.cscope
