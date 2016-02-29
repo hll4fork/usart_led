@@ -91,7 +91,8 @@ _STM32USARTSRCS = stm32f10x_gpio.c \
 				  stm32f10x_rcc.c \
 				  stm32f10x_usart.c \
 				  system_stm32f10x.c
-
+				  
+# get usart_lib dir source code's path
 STM32USARTSRCS = $(patsubst %, $(ST_USART)/%,$(_STM32USARTSRCS))
 
 SRCS = stm32f10x_it.c usart.c main.c
