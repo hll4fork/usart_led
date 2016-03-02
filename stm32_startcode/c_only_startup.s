@@ -24,6 +24,12 @@
  * CODING INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
  *
  * <h2><center>&copy; COPYRIGHT 2009 STMicroelectronics</center></h2>
+ * Edited by huanglilong 2016/3/2
+ * On reset, Cortex-M3 core enter Handler mode(privileged), and load MSP with the value from address 0x00000000,
+ * By defualt, Thread mode use MSP, you can switch it to PSP, but if your project don't have OS, then it is not necessary.
+ * In my board, BOOT0 connected to the GND, so the core will boot from the main flash menory(0x8000000), but it is aliased
+ * in the boot menory space(0x00000000), that is you can access flash menory from 0x08000000 of 0x0000000.
+ * all reference from ST's STM32F103 Programming manual and Reference manaul.
  */
 
   .syntax unified
@@ -122,7 +128,8 @@ Infinite_Loop:
 	.size	g_pfnVectors, .-g_pfnVectors
 
 /* On reset, the processor loads the MSP with the value from address 0x00000000 -- ref from stm32f103's programming manual 
- * so the MSP set on reset with the value of the address 0x00000000's value, that is _estack
+ * so the MSP set on reset with the value of the address 0x00000000's value, that is _estack,
+ * By defualt, Thread mode uses the MSP.
 */
 g_pfnVectors:
 	.word	_estack
